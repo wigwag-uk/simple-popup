@@ -1,3 +1,6 @@
+3.5.2
+- Fix: after updating, WordPress no longer offers the same version again.
+
 3.5.1
 - Test release to confirm updates from GitHub work. No functional changes.
 

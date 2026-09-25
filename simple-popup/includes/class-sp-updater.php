@@ -170,11 +170,15 @@ class SP_Updater {
             'banners'     => array(),
         );
 
-        if ( version_compare( $info['version'], $this->version, '>' ) ) {
+        // Use the version WordPress just read from disk. $this->version can be stale when this
+        // check runs in the same request that installed an update.
+        $installed = isset( $transient->checked[ $this->basename ] ) ? (string) $transient->checked[ $this->basename ] : $this->installed_version();
+
+        if ( version_compare( $info['version'], $installed, '>' ) ) {
             $transient->response[ $this->basename ] = $item;
             unset( $transient->no_update[ $this->basename ] );
         } else {
-            $item->new_version = $this->version;
+            $item->new_version = $installed;
             $transient->no_update[ $this->basename ] = $item;
             unset( $transient->response[ $this->basename ] );
         }
@@ -274,6 +278,13 @@ class SP_Updater {
             return $wanted;
         }
         return new WP_Error( 'sp_folder', 'Simple Popup update: could not prepare the plugin folder.' );
+    }
+
+    // Read the version straight from the plugin file (not cached)
+    private function installed_version() {
+        clearstatcache( true, $this->file );
+        $data = get_file_data( $this->file, array( 'Version' => 'Version' ) );
+        return $data['Version'] ? $data['Version'] : $this->version;
     }
 
     public function clear_cache() {

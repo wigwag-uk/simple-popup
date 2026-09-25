@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Simple Popup
  * Description: Lightweight popups managed from their own "Popups" section in the admin sidebar.
- * Version:     3.5.1
+ * Version:     3.5.2
  * Author:      m.n.vougiouka
  * Text Domain: simple-popup
  * Requires at least: 6.0
