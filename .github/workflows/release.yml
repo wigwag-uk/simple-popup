@@ -1,0 +1,59 @@
+# Publishes a GitHub Release whenever the plugin's Version number changes on main.
+# WordPress sites running Simple Popup 3.5.0+ then show "Update available".
+name: Release plugin
+
+on:
+  push:
+    branches: [main]
+    paths: ['simple-popup/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from plugin header
+        id: v
+        run: |
+          V=$(grep -m1 -E '^[[:space:]]*\*[[:space:]]*Version:' simple-popup/simple-popup.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          if ! [[ "$V" =~ ^[0-9]+(\.[0-9]+){0,3}$ ]]; then echo "::error::Invalid Version '$V' in simple-popup.php"; exit 1; fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Plugin version: $V"
+
+      - name: Skip if this version is already released
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "v${{ steps.v.outputs.version }} already released, nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check PHP syntax
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          find simple-popup -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build simple-popup.zip
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          zip -r simple-popup.zip simple-popup -x '*.DS_Store' '*/.git*'
+          unzip -l simple-popup.zip
+
+      - name: Publish release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.v.outputs.version }}"
+          NOTES=$(awk -v v="$V" '$0==v{f=1;next} f&&/^[[:space:]]*$/{exit} f{print}' simple-popup/changelog.txt)
+          [ -z "$NOTES" ] && NOTES="Version $V"
+          gh release create "v$V" simple-popup.zip --title "$V" --notes "$NOTES" --target "${{ github.sha }}" --latest
