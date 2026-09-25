@@ -1,0 +1,21 @@
+3.5.1
+- Test release to confirm updates from GitHub work. No functional changes.
+
+3.5.0
+- Updates from GitHub (wigwag-uk/simple-popup): new releases show in Plugins > Update available, with a SHA-256 check before install.
+- "Check for updates" link on the Plugins page.
+
+3.4.2
+- Header right padding 36px.
+
+3.4.0
+- Scroll only the content option, content padding (desktop/mobile), blank grid header with extra info.
+
+3.3.0
+- Security hardening: admin-only access, strict validation, REST API locked to admins.
+
+3.2.0
+- Colours for popup, title area and content area.
+
+3.1.0
+- Border radius/width/colour, duplicate popups, title tag choice, subtitle.
